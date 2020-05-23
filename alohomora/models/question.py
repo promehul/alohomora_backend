@@ -4,10 +4,10 @@ class Question(models.Model):
     """
     Contains questions to the Quiz
     """
-    def user_directory_path(instance, filename):
+    def user_directory_path(self, filename):
         import os.path
         fn, ext = os.path.splitext(filename)
-        return 'question/{0}{1}'.format(instance.pk, ext)
+        return 'question/{0}{1}'.format(self.pk, ext)
 
     image = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
 
@@ -24,3 +24,14 @@ class Question(models.Model):
         id = self.pk
 
         return f'Question: {id}' 
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            saved_file = self.image
+            self.image = None
+            super(Question, self).save(*args, **kwargs)
+            self.image = saved_file
+            if 'force_insert' in kwargs:
+                kwargs.pop('force_insert')
+
+        super(Question, self).save(*args, **kwargs)   
